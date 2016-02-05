@@ -1,0 +1,73 @@
+<?php
+
+use Drupal\file\Entity\File;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * @file
+ * Functions to support theming in the clean theme.
+ */
+
+/**
+ * @param array $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ */
+function clean_form_system_theme_settings_alter(array &$form, FormStateInterface &$form_state) {
+  $form['theme_extra'] = [
+    '#type' => 'details',
+    '#title' => t('Clean Configuration'),
+    '#open' => TRUE,
+    '#weight' => -10,
+  ];
+  $form['theme_extra']['background_image'] = [
+    '#type' => 'managed_file',
+    '#title' => t('Front Page Background Image'),
+    '#description' => 'Add background image for the front page',
+    '#required' => FALSE,
+    '#weight' => -4,
+    '#upload_location' => file_default_scheme() . '://theme/backgrounds/',
+    '#default_value' => theme_get_setting('background_image' , 'clean'),
+    '#upload_validators' => array(
+      'file_validate_extensions' => array('gif png jpg jpeg'),
+    ),
+  ];
+  $form['theme_extra']['twitter'] = [
+    '#type' => 'textfield',
+    '#title' => t('Twitter'),
+    '#default_value' => theme_get_setting('twitter' , 'clean'),
+  ];
+  $form['theme_extra']['github'] = [
+    '#type' => 'textfield',
+    '#title' => t('Github username'),
+    '#default_value' => theme_get_setting('github' , 'clean'),
+  ];
+  $form['theme_extra']['drupal_user'] = [
+    '#type' => 'textfield',
+    '#title' => t('Drupal user'),
+    '#default_value' => theme_get_setting('drupal_user' , 'clean'),
+  ];
+
+}
+
+function clean_form_system_theme_settings_submit(array &$form, FormStateInterface &$form_state) {
+
+}
+
+/**
+ * Implements hook_preprocess_page()
+ */
+function clean_preprocess_page(array &$variables) {
+  if($variables['is_front'] == TRUE){
+    $background_image = theme_get_setting('background_image', 'clean');
+    $fid = reset($background_image);
+
+    // Load the file.
+    $file = File::load($fid);
+
+    // Adding a validation otherwise is going to give you a white screen.
+    if(!($file == "")) {
+      // Generate the URL.
+      $variables['background_image'] = file_create_url($file->getFileUri());
+    }
+  }
+}
